@@ -2,11 +2,12 @@ import React, { useState } from 'react';
 import { Dialog } from '@headlessui/react';
 import { XMarkIcon } from '@heroicons/react/24/outline';
 import toast from 'react-hot-toast';
+import { useChainBet } from '../hooks/useChainBet';
 
 const BetModal = ({ market, onClose }) => {
+  const { placeBet, isPlacingBet } = useChainBet();
   const [prediction, setPrediction] = useState(true); // true = YES, false = NO
   const [amount, setAmount] = useState('');
-  const [isLoading, setIsLoading] = useState(false);
 
   const handlePlaceBet = async () => {
     if (!amount || parseFloat(amount) < 1) {
@@ -14,19 +15,11 @@ const BetModal = ({ market, onClose }) => {
       return;
     }
 
-    setIsLoading(true);
     try {
-      // Here you would integrate with your smart contract
-      // const contract = new ethers.Contract(contractAddress, abi, signer);
-      // await contract.placeBet(market.id, prediction, ethers.utils.parseUnits(amount, 6));
-      
-      toast.success(`Bet placed successfully! ${prediction ? 'YES' : 'NO'} - $${amount}`);
+      await placeBet(market.id, prediction, amount, 'USDC');
       onClose();
     } catch (error) {
-      toast.error('Failed to place bet');
-      console.error(error);
-    } finally {
-      setIsLoading(false);
+      console.error('Error placing bet:', error);
     }
   };
 
@@ -133,10 +126,10 @@ const BetModal = ({ market, onClose }) => {
             </button>
             <button
               onClick={handlePlaceBet}
-              disabled={isLoading || !amount}
+              disabled={isPlacingBet || !amount}
               className="flex-1 btn-primary disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              {isLoading ? 'Placing Bet...' : 'Place Bet'}
+              {isPlacingBet ? 'Placing Bet...' : 'Place Bet'}
             </button>
           </div>
         </Dialog.Panel>

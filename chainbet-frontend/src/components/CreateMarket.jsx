@@ -1,7 +1,9 @@
 import React, { useState } from 'react';
 import toast from 'react-hot-toast';
+import { useChainBet } from '../hooks/useChainBet';
 
 const CreateMarket = () => {
+  const { createMarket, isCreatingMarket } = useChainBet();
   const [formData, setFormData] = useState({
     question: '',
     targetPrice: '',
@@ -9,7 +11,6 @@ const CreateMarket = () => {
     oracle: 'BTC/USD',
     token: 'USDC'
   });
-  const [isLoading, setIsLoading] = useState(false);
 
   const oracles = [
     { value: 'BTC/USD', label: 'Bitcoin (BTC/USD)' },
@@ -47,20 +48,10 @@ const CreateMarket = () => {
       return;
     }
 
-    setIsLoading(true);
     try {
-      // Here you would integrate with your smart contract
-      // const contract = new ethers.Contract(contractAddress, abi, signer);
-      // const durationInSeconds = parseInt(formData.duration) * 24 * 60 * 60;
-      // await contract.createMarket(
-      //   formData.question,
-      //   ethers.utils.parseUnits(formData.targetPrice, 8), // Chainlink price feeds use 8 decimals
-      //   durationInSeconds,
-      //   oracleAddress,
-      //   tokenAddress
-      // );
+      await createMarket(formData);
       
-      toast.success('Market created successfully!');
+      // Reset form on success
       setFormData({
         question: '',
         targetPrice: '',
@@ -69,10 +60,7 @@ const CreateMarket = () => {
         token: 'USDC'
       });
     } catch (error) {
-      toast.error('Failed to create market');
-      console.error(error);
-    } finally {
-      setIsLoading(false);
+      console.error('Error creating market:', error);
     }
   };
 
@@ -208,10 +196,10 @@ const CreateMarket = () => {
           {/* Submit Button */}
           <button
             type="submit"
-            disabled={isLoading}
+            disabled={isCreatingMarket}
             className="w-full btn-primary disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            {isLoading ? 'Creating Market...' : 'Create Market'}
+            {isCreatingMarket ? 'Creating Market...' : 'Create Market'}
           </button>
         </form>
 

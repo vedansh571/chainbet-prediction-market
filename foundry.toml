@@ -13,3 +13,12 @@ remappings = [
 
 [profile.default.fuzz]
 runs = 256
+
+# Network configurations
+[rpc_endpoints]
+sepolia = "${SEPOLIA_RPC_URL}"
+mumbai = "${MUMBAI_RPC_URL}"
+
+[etherscan]
+sepolia = { key = "${ETHERSCAN_API_KEY}" }
+mumbai = { key = "${POLYGONSCAN_API_KEY}" }

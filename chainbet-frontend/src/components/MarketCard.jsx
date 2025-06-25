@@ -2,11 +2,13 @@ import React from 'react';
 import { formatDistanceToNow } from 'date-fns';
 
 const MarketCard = ({ market, onBetClick }) => {
-  const totalPool = market.totalYesBets + market.totalNoBets;
-  const yesPercentage = totalPool > 0 ? (market.totalYesBets / totalPool) * 100 : 50;
+  const totalPool = parseFloat(market.formattedTotalYesBets || 0) + parseFloat(market.formattedTotalNoBets || 0);
+  const yesPercentage = totalPool > 0 ? (parseFloat(market.formattedTotalYesBets || 0) / totalPool) * 100 : 50;
   const noPercentage = 100 - yesPercentage;
   
-  const priceProgress = (market.currentPrice / market.targetPrice) * 100;
+  const targetPrice = parseFloat(market.formattedTargetPrice || 0);
+  const currentPrice = targetPrice * 0.8; // Mock current price for now
+  const priceProgress = (currentPrice / targetPrice) * 100;
   const isCloseToTarget = priceProgress > 80;
 
   return (
@@ -16,7 +18,7 @@ const MarketCard = ({ market, onBetClick }) => {
           {market.question}
         </h3>
         <div className="flex items-center justify-between text-sm text-gray-600">
-          <span>Oracle: {market.oracle}</span>
+          <span>Market #{market.id}</span>
           <span>Ends {formatDistanceToNow(market.deadline, { addSuffix: true })}</span>
         </div>
       </div>
@@ -26,13 +28,13 @@ const MarketCard = ({ market, onBetClick }) => {
         <div className="flex justify-between items-center mb-2">
           <span className="text-sm font-medium text-gray-700">Current Price</span>
           <span className="text-lg font-bold text-gray-900">
-            ${market.currentPrice.toLocaleString()}
+            ${currentPrice.toLocaleString()}
           </span>
         </div>
         <div className="flex justify-between items-center mb-2">
           <span className="text-sm font-medium text-gray-700">Target Price</span>
           <span className="text-lg font-bold text-primary-600">
-            ${market.targetPrice.toLocaleString()}
+            ${targetPrice.toLocaleString()}
           </span>
         </div>
         
@@ -76,17 +78,44 @@ const MarketCard = ({ market, onBetClick }) => {
         </div>
         
         <div className="flex justify-between text-xs text-gray-600">
-          <span>YES: ${market.totalYesBets.toLocaleString()}</span>
-          <span>NO: ${market.totalNoBets.toLocaleString()}</span>
+          <span>YES: ${parseFloat(market.formattedTotalYesBets || 0).toLocaleString()}</span>
+          <span>NO: ${parseFloat(market.formattedTotalNoBets || 0).toLocaleString()}</span>
         </div>
+      </div>
+
+      {/* Market Status */}
+      <div className="mb-4">
+        <div className="flex items-center justify-between">
+          <span className="text-sm text-gray-600">Status:</span>
+          <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+            market.resolved 
+              ? 'bg-gray-100 text-gray-800' 
+              : market.isExpired 
+                ? 'bg-yellow-100 text-yellow-800'
+                : 'bg-green-100 text-green-800'
+          }`}>
+            {market.resolved 
+              ? 'Resolved' 
+              : market.isExpired 
+                ? 'Expired'
+                : 'Active'
+            }
+          </span>
+        </div>
+        {market.resolved && (
+          <p className="text-xs text-gray-500 mt-1">
+            Outcome: {market.outcome ? 'YES' : 'NO'}
+          </p>
+        )}
       </div>
 
       {/* Action Button */}
       <button
         onClick={onBetClick}
-        className="w-full btn-primary"
+        disabled={market.resolved || market.isExpired}
+        className="w-full btn-primary disabled:opacity-50 disabled:cursor-not-allowed"
       >
-        Place Bet
+        {market.resolved ? 'Market Resolved' : market.isExpired ? 'Market Expired' : 'Place Bet'}
       </button>
     </div>
   );

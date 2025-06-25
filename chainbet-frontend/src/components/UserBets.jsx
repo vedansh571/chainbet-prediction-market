@@ -1,33 +1,9 @@
 import React from 'react';
 import { formatDistanceToNow } from 'date-fns';
+import { useChainBet } from '../hooks/useChainBet';
 
 const UserBets = () => {
-  // Mock data - replace with actual contract calls
-  const userBets = [
-    {
-      id: 1,
-      marketId: 0,
-      question: "Will Bitcoin reach $100,000 by end of 2024?",
-      prediction: true,
-      amount: 500,
-      potentialWin: 750,
-      status: 'active',
-      placedAt: new Date('2024-01-15'),
-      deadline: new Date('2024-12-31')
-    },
-    {
-      id: 2,
-      marketId: 1,
-      question: "Will Ethereum reach $5,000 by Q2 2024?",
-      prediction: false,
-      amount: 300,
-      potentialWin: 420,
-      status: 'won',
-      placedAt: new Date('2024-02-01'),
-      deadline: new Date('2024-06-30'),
-      finalPrice: 4200
-    }
-  ];
+  const { userBets, markets, claimReward, isClaimingReward } = useChainBet();
 
   const getStatusColor = (status) => {
     switch (status) {
@@ -47,6 +23,29 @@ const UserBets = () => {
     }
   };
 
+  const handleClaimReward = async (marketId) => {
+    try {
+      await claimReward(marketId);
+    } catch (error) {
+      console.error('Error claiming reward:', error);
+    }
+  };
+
+  // Combine user bets with market data
+  const enrichedBets = userBets.map(bet => {
+    const market = markets.find(m => m.id === bet.marketId);
+    return {
+      ...bet,
+      question: market?.question || 'Unknown Market',
+      deadline: market?.deadline,
+      resolved: market?.resolved,
+      outcome: market?.outcome,
+      status: market?.resolved 
+        ? (bet.prediction === market.outcome ? 'won' : 'lost')
+        : 'active'
+    };
+  });
+
   return (
     <div>
       <div className="mb-6">
@@ -54,7 +53,7 @@ const UserBets = () => {
         <p className="text-gray-600">Track your prediction market positions</p>
       </div>
 
-      {userBets.length === 0 ? (
+      {enrichedBets.length === 0 ? (
         <div className="text-center py-12">
           <div className="text-6xl mb-4">🎯</div>
           <h3 className="text-lg font-medium text-gray-900 mb-2">No bets yet</h3>
@@ -62,8 +61,8 @@ const UserBets = () => {
         </div>
       ) : (
         <div className="space-y-4">
-          {userBets.map((bet) => (
-            <div key={bet.id} className="card">
+          {enrichedBets.map((bet) => (
+            <div key={`${bet.marketId}-${bet.bettor}`} className="card">
               <div className="flex items-start justify-between">
                 <div className="flex-1">
                   <h3 className="font-semibold text-gray-900 mb-2">
@@ -82,33 +81,31 @@ const UserBets = () => {
                     
                     <div>
                       <p className="text-gray-600">Bet Amount</p>
-                      <p className="font-medium">${bet.amount} USDC</p>
+                      <p className="font-medium">${bet.formattedAmount} USDC</p>
                     </div>
                     
                     <div>
-                      <p className="text-gray-600">Potential Win</p>
-                      <p className="font-medium text-success-600">
-                        ${bet.potentialWin} USDC
-                      </p>
-                    </div>
-                    
-                    <div>
-                      <p className="text-gray-600">Placed</p>
+                      <p className="text-gray-600">Status</p>
                       <p className="font-medium">
-                        {formatDistanceToNow(bet.placedAt, { addSuffix: true })}
+                        {bet.status === 'active' ? 'Active' : bet.status === 'won' ? 'Won' : 'Lost'}
                       </p>
+                    </div>
+                    
+                    <div>
+                      <p className="text-gray-600">Market ID</p>
+                      <p className="font-medium">#{bet.marketId}</p>
                     </div>
                   </div>
                   
-                  {bet.status === 'active' && (
+                  {bet.status === 'active' && bet.deadline && (
                     <p className="text-xs text-gray-500 mt-2">
                       Ends {formatDistanceToNow(bet.deadline, { addSuffix: true })}
                     </p>
                   )}
                   
-                  {bet.finalPrice && (
+                  {bet.resolved && (
                     <p className="text-xs text-gray-500 mt-2">
-                      Final price: ${bet.finalPrice.toLocaleString()}
+                      Outcome: {bet.outcome ? 'YES' : 'NO'}
                     </p>
                   )}
                 </div>
@@ -118,9 +115,13 @@ const UserBets = () => {
                     {getStatusText(bet.status)}
                   </span>
                   
-                  {bet.status === 'won' && (
-                    <button className="block mt-2 text-xs text-primary-600 hover:text-primary-700 font-medium">
-                      Claim Reward
+                  {bet.status === 'won' && !bet.claimed && (
+                    <button 
+                      onClick={() => handleClaimReward(bet.marketId)}
+                      disabled={isClaimingReward}
+                      className="block mt-2 text-xs text-primary-600 hover:text-primary-700 font-medium disabled:opacity-50"
+                    >
+                      {isClaimingReward ? 'Claiming...' : 'Claim Reward'}
                     </button>
                   )}
                 </div>

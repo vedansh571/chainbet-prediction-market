@@ -2,43 +2,36 @@ import React, { useState } from 'react';
 import { formatDistanceToNow } from 'date-fns';
 import MarketCard from './MarketCard';
 import BetModal from './BetModal';
+import { useChainBet } from '../hooks/useChainBet';
 
 const MarketList = () => {
+  const { markets, isLoading } = useChainBet();
   const [selectedMarket, setSelectedMarket] = useState(null);
   const [showBetModal, setShowBetModal] = useState(false);
-
-  // Mock data - replace with actual contract calls
-  const markets = [
-    {
-      id: 0,
-      question: "Will Bitcoin reach $100,000 by end of 2024?",
-      targetPrice: 100000,
-      currentPrice: 67500,
-      deadline: new Date('2024-12-31'),
-      totalYesBets: 15000,
-      totalNoBets: 8500,
-      resolved: false,
-      tokenAddress: '0x...',
-      oracle: 'BTC/USD'
-    },
-    {
-      id: 1,
-      question: "Will Ethereum reach $5,000 by Q2 2024?",
-      targetPrice: 5000,
-      currentPrice: 3200,
-      deadline: new Date('2024-06-30'),
-      totalYesBets: 12000,
-      totalNoBets: 18000,
-      resolved: false,
-      tokenAddress: '0x...',
-      oracle: 'ETH/USD'
-    }
-  ];
 
   const handleBetClick = (market) => {
     setSelectedMarket(market);
     setShowBetModal(true);
   };
+
+  if (isLoading) {
+    return (
+      <div className="text-center py-12">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-500 mx-auto"></div>
+        <p className="mt-4 text-gray-600">Loading markets...</p>
+      </div>
+    );
+  }
+
+  if (markets.length === 0) {
+    return (
+      <div className="text-center py-12">
+        <div className="text-gray-400 text-6xl mb-4">📊</div>
+        <h3 className="text-lg font-medium text-gray-900 mb-2">No Markets Available</h3>
+        <p className="text-gray-600">Be the first to create a prediction market!</p>
+      </div>
+    );
+  }
 
   return (
     <div>
