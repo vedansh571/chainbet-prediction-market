@@ -1,0 +1,38 @@
+# Dependencies
+node_modules/
+chainbet-frontend/node_modules/
+
+# Build outputs
+out/
+chainbet-frontend/dist/
+chainbet-frontend/build/
+
+# Cache
+cache/
+chainbet-frontend/.vite/
+
+# Environment variables
+.env
+.env.local
+.env.production
+chainbet-frontend/.env*
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Foundry
+cache_forge/
+broadcast/
