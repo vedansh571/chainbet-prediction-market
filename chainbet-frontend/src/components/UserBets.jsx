@@ -1,5 +1,7 @@
 import React from 'react';
 import { formatDistanceToNow } from 'date-fns';
+import { useContractWrite } from 'wagmi';
+import { toast } from 'react-hot-toast';
 
 const UserBets = () => {
   // Mock data - replace with actual contract calls
@@ -45,6 +47,43 @@ const UserBets = () => {
       case 'active': return '⏳ Active';
       default: return 'Unknown';
     }
+  };
+
+  const { write, isLoading: isTxLoading } = useContractWrite({
+    address: CONTRACT_CONFIG.CHAINBET_PREDICTION_MARKET,
+    abi: PREDICTION_MARKET_ABI,
+    functionName: 'createMarket',
+    onSuccess: () => {
+      toast.success('Market created successfully!');
+      setFormData({
+        question: '',
+        targetPrice: '',
+        duration: '7',
+        oracle: 'BTC/USD',
+        token: 'USDC'
+      });
+      setIsLoading(false);
+    },
+    onError: (error) => {
+      toast.error('Failed to create market');
+      setIsLoading(false);
+      console.error(error);
+    }
+  });
+
+  const handleSubmit = (event) => {
+    event.preventDefault();
+    // ... (rest of the form submission logic)
+
+    write({
+      args: [
+        formData.question,
+        parseInt(formData.targetPrice),
+        durationInSeconds,
+        oracleAddress,
+        tokenAddress
+      ]
+    });
   };
 
   return (

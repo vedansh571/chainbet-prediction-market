@@ -4,19 +4,21 @@ export const CONTRACT_CONFIG = {
   CHAINBET_PREDICTION_MARKET: "0x95b7287e4cf548aaf8f67788fd48ba9356dfb0e9",
   CHAINBET_BRIDGE: "0xc58139b618db9f761732090c3ba958a12972a891",
   
-  // Token addresses on Sepolia
-  USDC: "0x1c7D4B196Cb0C7B01d743Fbc6116a902379C7238",
-  USDT: "0x7169D38820dfd117C3FA1f22a697dBA58d90BA06",
+  // Token addresses on Sepolia - using common testnet tokens
+  // Note: You may need to deploy your own test tokens or use a faucet
+  USDC: "0x1c7D4B196Cb0C7B01d743Fbc6116a902379C7238", // Your test USDC
+  USDT: "0x7169D38820dfd117C3FA1f22a697dBA58d90BA06", // Your test USDT
   
   // Chain configuration
   CHAIN_ID: 11155111, // Sepolia
-  RPC_URL: "https://sepolia.infura.io/v3/YOUR_INFURA_KEY",
+  RPC_URL: "https://sepolia.infura.io/v3/a2e3e01b4c984bf4ad32975b6b296741",
   
   // Chainlink Price Feed Oracles for Sepolia
   PRICE_FEEDS: {
     ETH_USD: "0x694AA1769357215DE4FAC081bf1f309aDC325306",
     BTC_USD: "0x1b44F3514812d835EB1BDB0acB33d3fA3351Ee43",
     LINK_USD: "0xc59E3633BAAC79493d908e63626716e204A45EdF",
+    MATIC_USD: "0xd0D5e3DB44DE05E9F294BB0a3bEEaF030DE24Ada", // Added MATIC/USD oracle
     USDC_USD: "0x1c7D4B196Cb0C7B01d743Fbc6116a902379C7238", // USDC itself on Sepolia
   }
 };

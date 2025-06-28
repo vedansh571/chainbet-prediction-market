@@ -1,5 +1,20 @@
 import React, { useState } from 'react';
 import toast from 'react-hot-toast';
+import { useContractWrite, useAccount, useChainId } from 'wagmi';
+import { CONTRACT_CONFIG, PREDICTION_MARKET_ABI } from '../contracts/config';
+
+const ORACLE_ADDRESS_MAP = {
+  'BTC/USD': CONTRACT_CONFIG.PRICE_FEEDS.BTC_USD,
+  'ETH/USD': CONTRACT_CONFIG.PRICE_FEEDS.ETH_USD,
+  'LINK/USD': CONTRACT_CONFIG.PRICE_FEEDS.LINK_USD,
+  'MATIC/USD': CONTRACT_CONFIG.PRICE_FEEDS.MATIC_USD,
+  // Add more oracles as needed
+};
+
+const TOKEN_ADDRESS_MAP = {
+  'USDC': CONTRACT_CONFIG.USDC,
+  'USDT': CONTRACT_CONFIG.USDT,
+};
 
 const CreateMarket = () => {
   const [formData, setFormData] = useState({
@@ -10,6 +25,10 @@ const CreateMarket = () => {
     token: 'USDC'
   });
   const [isLoading, setIsLoading] = useState(false);
+
+  // Add wallet and network checks
+  const { address, isConnected } = useAccount();
+  const { chainId } = useChainId();
 
   const oracles = [
     { value: 'BTC/USD', label: 'Bitcoin (BTC/USD)' },
@@ -26,6 +45,39 @@ const CreateMarket = () => {
     { value: '365', label: '1 Year' }
   ];
 
+  const { write } = useContractWrite({
+    address: CONTRACT_CONFIG.CHAINBET_PREDICTION_MARKET,
+    abi: PREDICTION_MARKET_ABI,
+    functionName: 'createMarket',
+    onSuccess: () => {
+      toast.success('Market created successfully!');
+      setFormData({
+        question: '',
+        targetPrice: '',
+        duration: '7',
+        oracle: 'BTC/USD',
+        token: 'USDC'
+      });
+      setIsLoading(false);
+    },
+    onError: (error) => {
+      toast.error('Failed to create market');
+      setIsLoading(false);
+      console.error(error);
+    }
+  });
+
+  // Debug logging
+  console.log('Contract Config:', CONTRACT_CONFIG);
+  console.log('Contract Address:', CONTRACT_CONFIG.CHAINBET_PREDICTION_MARKET);
+  console.log('Write function available:', !!write);
+  console.log('Oracle Address Map:', ORACLE_ADDRESS_MAP);
+  console.log('Token Address Map:', TOKEN_ADDRESS_MAP);
+  console.log('Wallet connected:', isConnected);
+  console.log('Wallet address:', address);
+  console.log('Current chain ID:', chainId);
+  console.log('Expected chain ID:', CONTRACT_CONFIG.CHAIN_ID);
+
   const handleInputChange = (e) => {
     const { name, value } = e.target;
     setFormData(prev => ({
@@ -36,43 +88,49 @@ const CreateMarket = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    
     if (!formData.question || !formData.targetPrice) {
       toast.error('Please fill in all required fields');
       return;
     }
-
     if (parseFloat(formData.targetPrice) <= 0) {
       toast.error('Target price must be greater than 0');
       return;
     }
-
     setIsLoading(true);
     try {
-      // Here you would integrate with your smart contract
-      // const contract = new ethers.Contract(contractAddress, abi, signer);
-      // const durationInSeconds = parseInt(formData.duration) * 24 * 60 * 60;
-      // await contract.createMarket(
-      //   formData.question,
-      //   ethers.utils.parseUnits(formData.targetPrice, 8), // Chainlink price feeds use 8 decimals
-      //   durationInSeconds,
-      //   oracleAddress,
-      //   tokenAddress
-      // );
-      
-      toast.success('Market created successfully!');
-      setFormData({
-        question: '',
-        targetPrice: '',
-        duration: '7',
-        oracle: 'BTC/USD',
-        token: 'USDC'
+      const durationInSeconds = parseInt(formData.duration) * 24 * 60 * 60;
+      const oracleAddress = ORACLE_ADDRESS_MAP[formData.oracle];
+      const tokenAddress = TOKEN_ADDRESS_MAP[formData.token];
+      if (!oracleAddress || !tokenAddress) {
+        toast.error('Invalid oracle or token selection');
+        setIsLoading(false);
+        return;
+      }
+      console.log(formData.question, parseInt(formData.targetPrice), durationInSeconds, oracleAddress, tokenAddress);
+      if (!write) {
+        if (!isConnected) {
+          toast.error('Please connect your wallet first');
+        } else if (chainId !== CONTRACT_CONFIG.CHAIN_ID) {
+          toast.error(`Please switch to Sepolia network (Chain ID: ${CONTRACT_CONFIG.CHAIN_ID})`);
+        } else {
+          toast.error('Contract not ready. Please check your connection and try again.');
+        }
+        setIsLoading(false);
+        return;
+      }
+      write({
+        args: [
+          formData.question,
+          parseInt(formData.targetPrice),
+          durationInSeconds,
+          oracleAddress,
+          tokenAddress
+        ]
       });
     } catch (error) {
       toast.error('Failed to create market');
-      console.error(error);
-    } finally {
       setIsLoading(false);
+      console.error(error);
     }
   };
 
