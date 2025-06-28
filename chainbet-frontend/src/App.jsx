@@ -10,10 +10,10 @@ import './index.css';
 
 const config = getDefaultConfig({
   appName: 'ChainBet',
-  projectId: 'your-project-id', // Get from WalletConnect Cloud
+  projectId: '5629deabebbcaee22ac93716872ab564', // WalletConnect Project ID
   chains: [sepolia, polygonMumbai],
   transports: {
-    [sepolia.id]: http(),
+    [sepolia.id]: http('https://sepolia.infura.io/v3/a2e3e01b4c984bf4ad32975b6b296741'),
     [polygonMumbai.id]: http(),
   },
 });
